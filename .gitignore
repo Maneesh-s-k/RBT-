@@ -1,46 +1,88 @@
-# Build artifacts
-*.o
-*.obj
-*.lo
-*.slo
-*.out
-*.exe
-*.app
+# Compiled binaries
+backend/rbtree_server
+backend/test_rbt*
+backend/*.o
+backend/*.so
+backend/*.dylib
+backend/*.dll
+backend/*.exe
+backend/*.out
 
-# Compiled libraries
-*.a
-*.la
-*.lai
-*.lib
-*.so
-*.dll
-*.dylib
+# Build directories
+backend/build/
+backend/cmake-build-*/
+backend/CMakeFiles/
+backend/CMakeCache.txt
+backend/cmake_install.cmake
 
-# Precompiled headers
-*.gch
-*.pch
+# Downloaded dependencies
+backend/include/httplib.h
+backend/include/json.hpp
 
-# Dependency and module files
-*.d
-*.mod
-*.smod
+# Debug symbols
+backend/*.dSYM/
+backend/*.dSYM
 
-# Editor folders
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
 
-# Make/CMake generated files
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-build/
-compile_commands.json
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Logs
 *.log
+backend/*.log
+frontend/*.log
 
-# OS junk
-.DS_Store
-Thumbs.db
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node.js (if you add npm tools later)
+frontend/node_modules/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Coverage reports
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
+# Documentation builds
+docs/_build/
+site/
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Core dumps
+core
+core.*
+
+# Valgrind output
+vgcore.*
+*.memcheck

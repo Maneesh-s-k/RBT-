@@ -1,0 +1,333 @@
+/* Tree Visualization Components */
+.tree-svg .node-circle {
+    stroke: var(--node-stroke);
+    stroke-width: 2;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.tree-svg .node-circle.red {
+    fill: var(--red-node);
+}
+
+.tree-svg .node-circle.black {
+    fill: var(--black-node);
+}
+
+.tree-svg .node-circle:hover {
+    stroke-width: 3;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    transform: scale(1.05);
+}
+
+.tree-svg .node-circle.highlighted {
+    stroke: var(--warning-color);
+    stroke-width: 4;
+    animation: glow 1s ease-in-out;
+}
+
+@keyframes glow {
+    0%, 100% { 
+        stroke: var(--warning-color);
+        filter: drop-shadow(0 0 8px var(--warning-color));
+    }
+    50% { 
+        stroke: var(--primary-color);
+        filter: drop-shadow(0 0 12px var(--primary-color));
+    }
+}
+
+.tree-svg .node-text {
+    fill: var(--node-text);
+    font-size: 14px;
+    font-weight: bold;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    font-family: 'Courier New', monospace;
+}
+
+.tree-svg .edge {
+    stroke: var(--node-stroke);
+    stroke-width: 2;
+    fill: none;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.tree-svg .edge.highlighted {
+    stroke: var(--primary-color);
+    stroke-width: 3;
+    opacity: 1;
+}
+
+/* Empty tree message */
+.empty-tree-message {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-size: 18px;
+    fill: var(--text-muted);
+    font-style: italic;
+}
+
+/* Tree animation classes */
+.node-entering {
+    animation: nodeEnter 0.5s ease-out;
+}
+
+.node-exiting {
+    animation: nodeExit 0.3s ease-in;
+}
+
+@keyframes nodeEnter {
+    from {
+        opacity: 0;
+        transform: scale(0);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes nodeExit {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0);
+    }
+}
+
+/* Search highlight animation */
+.search-highlight {
+    animation: searchPulse 2s ease-in-out 3;
+}
+
+@keyframes searchPulse {
+    0%, 100% {
+        stroke: var(--info-color);
+        stroke-width: 2;
+    }
+    50% {
+        stroke: var(--warning-color);
+        stroke-width: 6;
+        filter: drop-shadow(0 0 10px var(--warning-color));
+    }
+}
+
+/* Validation indicators */
+.validation-success {
+    stroke: var(--success-color);
+    stroke-width: 3;
+    animation: validationSuccess 1s ease-out;
+}
+
+.validation-error {
+    stroke: var(--danger-color);
+    stroke-width: 3;
+    animation: validationError 1s ease-out;
+}
+
+@keyframes validationSuccess {
+    0% { stroke-width: 2; }
+    50% { stroke-width: 5; filter: drop-shadow(0 0 8px var(--success-color)); }
+    100% { stroke-width: 3; }
+}
+
+@keyframes validationError {
+    0% { stroke-width: 2; }
+    25%, 75% { 
+        stroke-width: 5; 
+        filter: drop-shadow(0 0 8px var(--danger-color));
+        transform: translateX(-2px);
+    }
+    50% { transform: translateX(2px); }
+    100% { 
+        stroke-width: 3; 
+        transform: translateX(0);
+    }
+}
+
+/* Control panel enhancements */
+.input-field input.error {
+    border-color: var(--danger-color);
+    background-color: #fef2f2;
+}
+
+.input-field input.success {
+    border-color: var(--success-color);
+    background-color: #f0fdf4;
+}
+
+/* Button loading state */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    color: white;
+}
+
+/* Message animations */
+.message.slide-in {
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+.message.slide-out {
+    animation: messageSlideOut 0.3s ease-in;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes messageSlideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+}
+
+/* Stats panel animations */
+.stat-card.updating .stat-value {
+    animation: statUpdate 0.5s ease-out;
+}
+
+@keyframes statUpdate {
+    0% { transform: scale(1); }
+    50% { 
+        transform: scale(1.1);
+        color: var(--primary-color);
+    }
+    100% { transform: scale(1); }
+}
+
+/* Tree container scroll indicators */
+.tree-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        var(--primary-color) 0%, 
+        transparent 50%, 
+        var(--primary-color) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.tree-container.scrollable::before {
+    opacity: 0.3;
+}
+
+/* Responsive tree visualization */
+@media (max-width: 768px) {
+    .tree-svg .node-circle {
+        r: 20;
+    }
+    
+    .tree-svg .node-text {
+        font-size: 12px;
+    }
+    
+    .tree-container {
+        min-height: 400px;
+    }
+    
+    .tree-svg {
+        height: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tree-svg .node-circle {
+        r: 18;
+    }
+    
+    .tree-svg .node-text {
+        font-size: 10px;
+    }
+    
+    .tree-container {
+        min-height: 350px;
+    }
+    
+    .tree-svg {
+        height: 350px;
+    }
+}
+
+/* Accessibility improvements */
+.btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.input-field input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .tree-svg .node-circle {
+        stroke-width: 3;
+    }
+    
+    .tree-svg .edge {
+        stroke-width: 3;
+        opacity: 1;
+    }
+    
+    .message {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .tree-svg .node-circle,
+    .tree-svg .edge,
+    .btn,
+    .message {
+        transition: none;
+    }
+    
+    .loading-spinner,
+    .node-entering,
+    .node-exiting,
+    .search-highlight,
+    .validation-success,
+    .validation-error {
+        animation: none;
+    }
+}

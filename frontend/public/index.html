@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red-Black Tree Visualizer</title>
+    <link rel="stylesheet" href="../src/css/style.css">
+    <link rel="stylesheet" href="../src/css/components.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>🌳 Red-Black Tree Visualizer</h1>
+                <p>Interactive visualization of Red-Black Tree operations with C++ backend</p>
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="controls-container">
+                <!-- Input Controls -->
+                <div class="input-group">
+                    <div class="input-field">
+                        <label for="nodeValue">Node Value</label>
+                        <input type="number" id="nodeValue" placeholder="Enter value (1-999)" min="1" max="999">
+                    </div>
+                    <div class="button-group">
+                        <button id="insertBtn" class="btn btn-primary" title="Insert node">
+                            <span class="btn-icon">➕</span> Insert
+                        </button>
+                        <button id="deleteBtn" class="btn btn-danger" title="Delete node">
+                            <span class="btn-icon">➖</span> Delete
+                        </button>
+                        <button id="searchBtn" class="btn btn-info" title="Search node">
+                            <span class="btn-icon">🔍</span> Search
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="action-group">
+                    <button id="randomBtn" class="btn btn-secondary" title="Insert random node">
+                        <span class="btn-icon">🎲</span> Random
+                    </button>
+                    <button id="clearBtn" class="btn btn-warning" title="Clear all nodes">
+                        <span class="btn-icon">🗑️</span> Clear All
+                    </button>
+                    <button id="validateBtn" class="btn btn-success" title="Validate RB properties">
+                        <span class="btn-icon">✅</span> Validate
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Panel -->
+        <section class="stats-panel">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value" id="nodeCount">0</div>
+                    <div class="stat-label">Nodes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="treeHeight">0</div>
+                    <div class="stat-label">Height</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="validTree">✓</div>
+                    <div class="stat-label">Valid RB Tree</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lastOperation">-</div>
+                    <div class="stat-label">Last Operation</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Message Area -->
+        <section class="message-section">
+            <div id="messageContainer" class="message-container"></div>
+        </section>
+
+        <!-- Visualization Area -->
+        <section class="visualization-section">
+            <div class="viz-header">
+                <h2>Tree Visualization</h2>
+                <div class="viz-controls">
+                    <button id="centerBtn" class="btn btn-small">Center View</button>
+                    <button id="exportBtn" class="btn btn-small">Export JSON</button>
+                </div>
+            </div>
+            <div class="tree-container">
+                <svg id="treeSvg" class="tree-svg">
+                    <!-- Tree visualization will be rendered here -->
+                </svg>
+            </div>
+        </section>
+
+        <!-- Properties Panel -->
+        <section class="properties-panel">
+            <h3>Red-Black Tree Properties</h3>
+            <div class="properties-grid">
+                <div class="property-item">
+                    <span class="property-icon">🔴</span>
+                    <span class="property-text">Every node is either red or black</span>
+                </div>
+                <div class="property-item">
+                    <span class="property-icon">⚫</span>
+                    <span class="property-text">The root is always black</span>
+                </div>
+                <div class="property-item">
+                    <span class="property-icon">👥</span>
+                    <span class="property-text">Red nodes have black children</span>
+                </div>
+                <div class="property-item">
+                    <span class="property-icon">📏</span>
+                    <span class="property-text">All paths have same black height</span>
+                </div>
+                <div class="property-item">
+                    <span class="property-icon">🍃</span>
+                    <span class="property-text">All leaves (NIL) are black</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../src/js/api/client.js"></script>
+<script src="../src/js/api/endpoints.js"></script>
+<script src="../src/js/api/animation.js"></script>
+<script src="../src/js/utils/svg-helpers.js"></script>
+<script src="../src/js/components/tree-visualizer.js"></script>
+<script src="../src/js/components/control-panel.js"></script>
+<script src="../src/js/components/stats-panel.js"></script>
+<script src="../src/js/app.js"></script>
+
+</body>
+</html>
