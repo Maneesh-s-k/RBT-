@@ -7,12 +7,23 @@ template<typename T>
 RedBlackTree<T>::RedBlackTree() {
     NIL = new RBNode<T>(T(), false);  // Black sentinel node
     root = NIL;
+    nodeCount = 0;
 }
 
 template<typename T>
 RedBlackTree<T>::~RedBlackTree() {
     clear();
     delete NIL;
+}
+
+template<typename T>
+bool RedBlackTree<T>::empty() const {
+    return root == NIL;
+}
+
+template<typename T>
+size_t RedBlackTree<T>::size() const {
+    return nodeCount;
 }
 
 template<typename T>
@@ -90,6 +101,8 @@ void RedBlackTree<T>::insert(const T& value) {
     node->isRed = true;
 
     fixInsert(node);
+    nodeCount++;
+    updateLayout();
 }
 
 template<typename T>
@@ -165,6 +178,7 @@ template<typename T>
 void RedBlackTree<T>::clear() {
     clearHelper(root);
     root = NIL;
+    nodeCount = 0;
 }
 
 template<typename T>
@@ -249,11 +263,13 @@ bool RedBlackTree<T>::remove(const T& value) {
     }
 
     delete z;
+    nodeCount--;
 
     if (!yOriginalColor) {
         fixDelete(x);
     }
 
+    updateLayout();
     return true;
 }
 
@@ -314,4 +330,107 @@ void RedBlackTree<T>::fixDelete(RBNode<T>* x) {
     x->isRed = false;
 }
 
-} // namespace rbtree 
+template<typename T>
+int RedBlackTree<T>::height() const {
+    return heightHelper(root);
+}
+
+template<typename T>
+int RedBlackTree<T>::heightHelper(RBNode<T>* node) const {
+    if (node == NIL) return 0;
+    return 1 + std::max(heightHelper(node->left), heightHelper(node->right));
+}
+
+template<typename T>
+std::vector<RBNode<T>*> RedBlackTree<T>::getAllNodes() const {
+    std::vector<RBNode<T>*> nodes;
+    collectNodes(root, nodes);
+    return nodes;
+}
+
+template<typename T>
+void RedBlackTree<T>::collectNodes(RBNode<T>* node, std::vector<RBNode<T>*>& nodes) const {
+    if (node != NIL) {
+        nodes.push_back(node);
+        collectNodes(node->left, nodes);
+        collectNodes(node->right, nodes);
+    }
+}
+
+template<typename T>
+void RedBlackTree<T>::updateLayout() {
+    if (root == NIL) return;
+    
+    int position = 0;
+    calculatePositions(root, 0, position);
+}
+
+template<typename T>
+void RedBlackTree<T>::calculatePositions(RBNode<T>* node, int level, int& position) {
+    if (node == NIL) return;
+    
+    calculatePositions(node->left, level + 1, position);
+    
+    node->x = position * 80; // 80px spacing between nodes
+    node->y = level * 100;   // 100px spacing between levels
+    node->level = level;
+    position++;
+    
+    calculatePositions(node->right, level + 1, position);
+}
+
+template<typename T>
+std::string RedBlackTree<T>::toJSON() const {
+    if (root == NIL) return "null";
+    return nodeToJSON(root);
+}
+
+template<typename T>
+std::string RedBlackTree<T>::nodeToJSON(RBNode<T>* node) const {
+    if (node == NIL) return "null";
+    
+    std::ostringstream oss;
+    oss << "{";
+    oss << "\"data\":" << node->data << ",";
+    oss << "\"color\":\"" << (node->isRed ? "red" : "black") << "\",";
+    oss << "\"x\":" << node->x << ",";
+    oss << "\"y\":" << node->y << ",";
+    oss << "\"left\":" << nodeToJSON(node->left) << ",";
+    oss << "\"right\":" << nodeToJSON(node->right);
+    oss << "}";
+    return oss.str();
+}
+
+template<typename T>
+bool RedBlackTree<T>::isValidRBTree() const {
+    if (root == NIL) return true;
+    if (root->isRed) return false; // Root must be black
+    
+    int blackHeight = -1;
+    return validateNode(root, 0, blackHeight);
+}
+
+template<typename T>
+bool RedBlackTree<T>::validateNode(RBNode<T>* node, int blackCount, int& blackHeight) const {
+    if (node == NIL) {
+        if (blackHeight == -1) {
+            blackHeight = blackCount;
+        }
+        return blackHeight == blackCount;
+    }
+    
+    // Red node cannot have red children
+    if (node->isRed) {
+        if ((node->left != NIL && node->left->isRed) || 
+            (node->right != NIL && node->right->isRed)) {
+            return false;
+        }
+    }
+    
+    if (!node->isRed) blackCount++;
+    
+    return validateNode(node->left, blackCount, blackHeight) && 
+           validateNode(node->right, blackCount, blackHeight);
+}
+
+} // namespace rbtree
