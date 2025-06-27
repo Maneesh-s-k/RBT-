@@ -7,28 +7,29 @@ class APIClient {
 
     // Get API base URL from environment or auto-detect
     getAPIBaseURL() {
-        // Check if we're in a browser environment
-        if (typeof window !== 'undefined') {
-            // For vanilla JavaScript in browser, check for global config
-            if (window.ENV && window.ENV.API_BASE_URL) {
-                return window.ENV.API_BASE_URL;
-            }
-            
-            // Environment detection fallback
-            const isProduction = window.location.hostname !== 'localhost' && 
-                                window.location.hostname !== '127.0.0.1';
-            
-            return isProduction 
-                ? 'https://your-backend.onrender.com/api'
-                : 'http://localhost:8080/api';
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+        // For vanilla JavaScript in browser, check for global config
+        if (window.ENV && window.ENV.API_BASE_URL) {
+            return window.ENV.API_BASE_URL;
         }
         
-        // Node.js environment (if using bundlers)
-        return process.env.API_BASE_URL || 
-               (process.env.NODE_ENV === 'production' 
-                   ? 'https://your-backend.onrender.com/api'
-                   : 'http://localhost:8080/api');
+        // Environment detection fallback
+        const isProduction = window.location.hostname !== 'localhost' && 
+                            window.location.hostname !== '127.0.0.1';
+        
+        return isProduction 
+            ? 'https://rbtvisualization.onrender.com/api'  // FIXED: Use your actual URL
+            : 'http://localhost:8080/api';
     }
+    
+    // Node.js environment (if using bundlers)
+    return process.env.API_BASE_URL || 
+           (process.env.NODE_ENV === 'production' 
+               ? 'https://rbtvisualization.onrender.com/api'  // FIXED: Use your actual URL
+               : 'http://localhost:8080/api');
+}
+
 
     // Connection status management
     addConnectionListener(callback) {
