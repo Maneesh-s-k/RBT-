@@ -1,19 +1,22 @@
-FROM ubuntu:22.04
+FROM alpine:latest
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
+# Install dependencies using apk (Alpine package manager)
+RUN apk update && \
+    apk add --no-cache \
     g++ \
     make \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    clang \
+    musl-dev
 
 # Set working directory
 WORKDIR /app
 
-# Copy backend files
-COPY backend/ .
+# Copy current directory to /app
+COPY . .
 
 # Build the application
-RUN make clean && make
+RUN make
 
 # Expose port
 EXPOSE 8080
