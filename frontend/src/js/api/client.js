@@ -1,8 +1,33 @@
 class APIClient {
-    constructor(baseURL = 'http://localhost:8080/api') {
-        this.baseURL = baseURL;
+    constructor(baseURL = null) {
+        this.baseURL = baseURL || this.getAPIBaseURL();
         this.isConnected = false;
         this.connectionListeners = [];
+    }
+
+    // Get API base URL from environment or auto-detect
+    getAPIBaseURL() {
+        // Check if we're in a browser environment
+        if (typeof window !== 'undefined') {
+            // For vanilla JavaScript in browser, check for global config
+            if (window.ENV && window.ENV.API_BASE_URL) {
+                return window.ENV.API_BASE_URL;
+            }
+            
+            // Environment detection fallback
+            const isProduction = window.location.hostname !== 'localhost' && 
+                                window.location.hostname !== '127.0.0.1';
+            
+            return isProduction 
+                ? 'https://your-backend.onrender.com/api'
+                : 'http://localhost:8080/api';
+        }
+        
+        // Node.js environment (if using bundlers)
+        return process.env.API_BASE_URL || 
+               (process.env.NODE_ENV === 'production' 
+                   ? 'https://your-backend.onrender.com/api'
+                   : 'http://localhost:8080/api');
     }
 
     // Connection status management
@@ -102,5 +127,8 @@ class APIClient {
     }
 }
 
-// Create global API client instance
+// Create global API client instance with auto-detected URL
 window.apiClient = new APIClient();
+
+// Log the detected API URL for debugging
+console.log('API Client initialized with base URL:', window.apiClient.baseURL);

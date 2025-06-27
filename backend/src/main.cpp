@@ -2,6 +2,8 @@
 #include "api/tree_api.h"
 #include <iostream>
 #include <signal.h>
+#include <cstdlib>
+#include <string>
 
 // Global server pointer for signal handling
 httplib::Server* server_ptr = nullptr;
@@ -27,26 +29,33 @@ int main() {
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
     
+    // Get environment variables
+    const char* port_env = std::getenv("PORT");
+    const int PORT = port_env ? std::atoi(port_env) : 8080;
+    
+    const char* env = std::getenv("NODE_ENV");
+    const bool isProduction = env && std::string(env) == "production";
+    
     TreeAPI treeAPI;
-    // added temporarily for debuging 
-    std::cout << "Clearing tree on server startup..." << std::endl;
-    treeAPI.clearTree();
-    std::cout << "Tree cleared." << std::endl;
-
     
+    // Clear tree on startup (temporary for debugging)
+    if (!isProduction) {
+        std::cout << "Clearing tree on server startup..." << std::endl;
+        treeAPI.clearTree();
+        std::cout << "Tree cleared." << std::endl;
+    }
+    
+    // Setup API routes (ONLY ONCE)
     treeAPI.setupRoutes(server);
     
-    // Setup API routes
-    treeAPI.setupRoutes(server);
+    // REMOVED: Static file serving (not needed for backend-only deployment)
+    // server.set_mount_point("/", "../frontend/public");
     
-    // Serve static files (frontend)
-    server.set_mount_point("/", "../frontend/public");
-    
-    const int PORT = 8080;
     std::cout << "🌳 Red-Black Tree API Server" << std::endl;
     std::cout << "================================" << std::endl;
-    std::cout << "Server starting on http://localhost:" << PORT << std::endl;
-    std::cout << "API Base URL: http://localhost:" << PORT << "/api" << std::endl;
+    std::cout << "Environment: " << (isProduction ? "Production" : "Development") << std::endl;
+    std::cout << "Server starting on port " << PORT << std::endl;
+    std::cout << "API Base URL: http://0.0.0.0:" << PORT << "/api" << std::endl;
     std::cout << std::endl;
     std::cout << "Available endpoints:" << std::endl;
     std::cout << "  GET    /api/health           - Health check" << std::endl;
@@ -62,6 +71,7 @@ int main() {
     std::cout << "Press Ctrl+C to stop the server" << std::endl;
     std::cout << "================================" << std::endl;
     
+    // Start server
     if (!server.listen("0.0.0.0", PORT)) {
         std::cerr << "Failed to start server on port " << PORT << std::endl;
         return 1;

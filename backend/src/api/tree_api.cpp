@@ -38,18 +38,26 @@ void TreeAPI::setupRoutes(httplib::Server& server) {
         std::cout.flush();
     });
     
-    // Enable CORS for all routes
-    server.set_pre_routing_handler([](const httplib::Request&, httplib::Response& res) {
-        res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-        res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        return httplib::Server::HandlerResponse::Unhandled;
-    });
+   
+    // Set CORS headers for all requests
+server.set_pre_routing_handler([](const httplib::Request& req, httplib::Response& res) {
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    res.set_header("Access-Control-Max-Age", "86400"); // Cache preflight for 24 hours
+    return httplib::Server::HandlerResponse::Unhandled;
+});
 
-    // Handle OPTIONS requests (CORS preflight)
-    server.Options(".*", [](const httplib::Request&, httplib::Response&) {
-        return;
-    });
+// Handle OPTIONS preflight requests explicitly
+server.Options(".*", [](const httplib::Request&, httplib::Response& res) {
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    res.set_header("Access-Control-Max-Age", "86400");
+    res.status = 200;
+    res.set_content("", "text/plain");
+});
+
 
     // Health check
     server.Get("/api/health", [this](const httplib::Request&, httplib::Response& res) {
