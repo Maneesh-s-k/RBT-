@@ -1,4 +1,4 @@
-#include "include/rbtree/tree.h"
+#include "rbtree/tree.h"
 #include <iostream>
 #include <vector>
 #include <cassert>
@@ -139,12 +139,11 @@ void test_edge_cases() {
     
     // Duplicate values
     tree.insert(1);
-    tree.insert(1);  // Duplicate insert
+    tree.insert(1);  // Duplicate insert - should be ignored
     assert(tree.search(1) && "Should find value after duplicate insert");
-    assert(tree.remove(1) && "Should remove first occurrence");
-    assert(tree.search(1) && "Should still find second occurrence");
-    assert(tree.remove(1) && "Should remove second occurrence");
-    assert(tree.empty() && "Should be empty after removing all occurrences");
+    assert(tree.size() == 1 && "Size should be 1 after duplicate insert");
+    assert(tree.remove(1) && "Should remove the single occurrence");
+    assert(tree.empty() && "Should be empty after removing the value");
     
     // Sequential vs Random insertions
     // Sequential

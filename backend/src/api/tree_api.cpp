@@ -40,7 +40,7 @@ void TreeAPI::setupRoutes(httplib::Server& server) {
     
    
     // Set CORS headers for all requests
- server.set_pre_routing_handler([](const httplib::Request& req, httplib::Response& res) {
+    server.set_pre_routing_handler([](const httplib::Request&, httplib::Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
         res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
