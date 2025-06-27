@@ -90,86 +90,102 @@ class TreeVisualizer {
     }
 
     // FIXED: Symmetric tree layout algorithm (Reingold-Tilford inspired)
-    calculateSymmetricLayout(nodes) {
-        if (nodes.length === 0) return [];
+    // FIXED: Preserve left/right semantics in layout
+calculateSymmetricLayout(nodes) {
+    if (nodes.length === 0) return [];
+
+    // Find root node
+    const root = nodes.find(node => node.parent === null);
+    if (!root) return nodes;
+
+    // Build tree structure
+    const nodeMap = new Map(nodes.map(node => [node.data, node]));
+    const children = new Map();
+
+    // Initialize children map with explicit left/right tracking
+    nodes.forEach(node => {
+        children.set(node.data, { left: null, right: null });
+    });
+
+    // Populate children with LEFT/RIGHT distinction
+    nodes.forEach(node => {
+        if (node.left !== null) {
+            const leftChild = nodeMap.get(node.left);
+            if (leftChild) children.get(node.data).left = leftChild;
+        }
+        if (node.right !== null) {
+            const rightChild = nodeMap.get(node.right);
+            if (rightChild) children.get(node.data).right = rightChild;
+        }
+    });
+
+    const positions = new Map();
+
+    // Calculate subtree widths
+    const calculateSubtreeWidth = (node) => {
+        if (!node) return 0;
         
-        // Find root node
-        const root = nodes.find(node => node.parent === null);
-        if (!root) return nodes;
+        const nodeChildren = children.get(node.data);
+        const leftWidth = nodeChildren.left ? calculateSubtreeWidth(nodeChildren.left) : 0;
+        const rightWidth = nodeChildren.right ? calculateSubtreeWidth(nodeChildren.right) : 0;
         
-        // Build tree structure
-        const nodeMap = new Map(nodes.map(node => [node.data, node]));
-        const children = new Map();
+        if (leftWidth === 0 && rightWidth === 0) {
+            return this.minNodeSpacing;
+        }
         
-        // Initialize children map
-        nodes.forEach(node => {
-            children.set(node.data, []);
-        });
+        return Math.max(leftWidth + rightWidth, this.minNodeSpacing);
+    };
+
+    // Position nodes with LEFT/RIGHT semantics preserved
+    const positionNode = (node, x, y) => {
+        if (!node) return;
         
-        // Populate children
-        nodes.forEach(node => {
-            if (node.left !== null) {
-                const leftChild = nodeMap.get(node.left);
-                if (leftChild) children.get(node.data).push(leftChild);
-            }
-            if (node.right !== null) {
-                const rightChild = nodeMap.get(node.right);
-                if (rightChild) children.get(node.data).push(rightChild);
-            }
-        });
+        positions.set(node.data, { x, y });
         
-        // Calculate positions using symmetric algorithm
-        const positions = new Map();
+        const nodeChildren = children.get(node.data);
+        const leftChild = nodeChildren.left;
+        const rightChild = nodeChildren.right;
         
-        // First pass: calculate subtree widths (bottom-up)
-        const calculateSubtreeWidth = (node) => {
-            const nodeChildren = children.get(node.data) || [];
-            if (nodeChildren.length === 0) {
-                return this.minNodeSpacing;
-            }
-            
-            let totalWidth = 0;
-            nodeChildren.forEach(child => {
-                totalWidth += calculateSubtreeWidth(child);
-            });
-            
-            return Math.max(totalWidth, this.minNodeSpacing);
-        };
+        if (!leftChild && !rightChild) return;
         
-        // Second pass: position nodes (top-down)
-        const positionNode = (node, x, y, availableWidth) => {
-            positions.set(node.data, { x, y });
-            
-            const nodeChildren = children.get(node.data) || [];
-            if (nodeChildren.length === 0) return;
-            
-            // Calculate positions for children
-            let currentX = x - availableWidth / 2;
-            
-            nodeChildren.forEach(child => {
-                const childWidth = calculateSubtreeWidth(child);
-                const childX = currentX + childWidth / 2;
-                const childY = y + this.levelHeight;
-                
-                positionNode(child, childX, childY, childWidth);
-                currentX += childWidth;
-            });
-        };
+        // Calculate spacing based on subtree widths
+        const leftWidth = leftChild ? calculateSubtreeWidth(leftChild) : 0;
+        const rightWidth = rightChild ? calculateSubtreeWidth(rightChild) : 0;
+        const totalWidth = Math.max(leftWidth + rightWidth, this.minNodeSpacing);
         
-        // Start positioning from root
-        const rootWidth = calculateSubtreeWidth(root);
-        const rootX = this.width / 2;
-        const rootY = 100;
+        const childY = y + this.levelHeight;
         
-        positionNode(root, rootX, rootY, rootWidth);
-        
-        // Apply positions to nodes
-        return nodes.map(node => ({
-            ...node,
-            x: positions.get(node.data)?.x || this.width / 2,
-            y: positions.get(node.data)?.y || 100
-        }));
-    }
+        // FIXED: Always place left child to the LEFT, right child to the RIGHT
+        if (leftChild && rightChild) {
+            // Both children exist - normal symmetric placement
+            const leftX = x - totalWidth / 4;
+            const rightX = x + totalWidth / 4;
+            positionNode(leftChild, leftX, childY);
+            positionNode(rightChild, rightX, childY);
+        } else if (leftChild) {
+            // ONLY left child - place it to the LEFT of parent
+            const leftX = x - this.minNodeSpacing / 3; // Offset to the left
+            positionNode(leftChild, leftX, childY);
+        } else if (rightChild) {
+            // ONLY right child - place it to the RIGHT of parent
+            const rightX = x + this.minNodeSpacing / 3; // Offset to the right
+            positionNode(rightChild, rightX, childY);
+        }
+    };
+
+    // Start positioning from root
+    const rootX = this.width / 2;
+    const rootY = 100;
+    positionNode(root, rootX, rootY);
+
+    // Apply positions to nodes
+    return nodes.map(node => ({
+        ...node,
+        x: positions.get(node.data)?.x || this.width / 2,
+        y: positions.get(node.data)?.y || 100
+    }));
+}
+
 
     // FIXED: Dynamic viewBox adjustment for tree expansion
     adjustViewBoxForTree(nodes) {
