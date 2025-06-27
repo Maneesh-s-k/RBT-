@@ -16,7 +16,7 @@
     stroke: var(--node-stroke);
     stroke-width: 2;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease-out; /* Smoother, slower transition */
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
@@ -30,8 +30,9 @@
 
 .tree-svg .node-circle:hover {
     stroke-width: 3;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-    transform: scale(1.05);
+    stroke: #3b82f6; /* Blue glow */
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.4)); /* Reduced glow intensity */
+    /* No transform - removed scaling completely for smooth effect */
 }
 
 .tree-svg .node-circle.highlighted {
@@ -66,7 +67,7 @@
     stroke-width: 2;
     fill: none;
     opacity: 0.7;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease-out; /* Smoother transition */
 }
 
 .tree-svg .edge.highlighted {

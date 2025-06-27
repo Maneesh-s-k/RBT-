@@ -326,16 +326,23 @@ class TreeVisualizer {
     }
 
     onNodeHover(node, element, isEntering) {
-        const circle = element.querySelector('.node-circle');
-        
-        if (isEntering) {
-            circle.style.transform = 'scale(1.1)';
-            circle.style.filter = 'drop-shadow(0 6px 12px rgba(0,0,0,0.4))';
-        } else {
-            circle.style.transform = 'scale(1)';
-            circle.style.filter = 'drop-shadow(0 3px 6px rgba(0,0,0,0.2))';
-        }
+    const circle = element.querySelector('.node-circle');
+    
+    if (isEntering) {
+        // Remove scale transform to prevent jitter
+        circle.style.transform = 'none';
+        // Apply subtle blue glow effect only
+        circle.style.filter = 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.4))';
+        circle.style.stroke = '#3b82f6';
+        circle.style.strokeWidth = '3';
+    } else {
+        circle.style.transform = 'none';
+        circle.style.filter = 'drop-shadow(0 3px 6px rgba(0,0,0,0.2))';
+        circle.style.stroke = '#374151';
+        circle.style.strokeWidth = '4';
     }
+}
+
 
     highlightNode(value, className = 'highlighted') {
         const nodeElement = this.nodeGroup.querySelector(`[data-value="${value}"]`);

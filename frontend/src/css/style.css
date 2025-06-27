@@ -734,8 +734,10 @@ body {
 }
 
 .tree-svg .node-circle:hover {
-    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
-    transform: scale(1.1);
+    stroke-width: 3;
+    stroke: #3b82f6; /* Blue glow */
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+    /* Remove transform completely for no scaling */
 }
 
 .tree-svg .edge {
