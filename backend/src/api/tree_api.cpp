@@ -40,28 +40,27 @@ void TreeAPI::setupRoutes(httplib::Server& server) {
     
    
     // Set CORS headers for all requests
-server.set_pre_routing_handler([](const httplib::Request& req, httplib::Response& res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
-    res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-    res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    res.set_header("Access-Control-Max-Age", "86400"); // Cache preflight for 24 hours
-    return httplib::Server::HandlerResponse::Unhandled;
-});
+ server.set_pre_routing_handler([](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+        res.set_header("Access-Control-Max-Age", "86400");
+        return httplib::Server::HandlerResponse::Unhandled;
+    });
 
-// Handle OPTIONS preflight requests explicitly
-server.Options(".*", [](const httplib::Request&, httplib::Response& res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
-    res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-    res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    res.set_header("Access-Control-Max-Age", "86400");
-    res.status = 200;
-    res.set_content("", "text/plain");
-});
-
-
-    // Health check
-    server.Get("/api/health", [this](const httplib::Request&, httplib::Response& res) {
-        auto response = successResponse("Server is healthy");
+    // Handle OPTIONS preflight requests (WITHOUT setting headers again)
+    server.Options(".*", [](const httplib::Request&, httplib::Response& res) {
+        // Don't set CORS headers here - already set in pre_routing_handler
+        res.status = 200;
+        res.set_content("", "text/plain");
+    });
+    
+    // Your existing API routes...
+    server.Get("/api/health", [](const httplib::Request&, httplib::Response& res) {
+        json response = {
+            {"status", "healthy"},
+            {"timestamp", time(nullptr)}
+        };
         res.set_content(response.dump(), "application/json");
     });
 
