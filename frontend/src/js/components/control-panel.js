@@ -1,5 +1,21 @@
 class ControlPanel {
     constructor() {
+        this.isProcessing = false;
+        this.callbacks = {};
+        this.elements = {};
+        
+        // Wait for DOM to be ready before initializing
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.initialize();
+            });
+        } else {
+            this.initialize();
+        }
+    }
+
+    initialize() {
+        // Get elements after DOM is ready
         this.elements = {
             nodeValue: document.getElementById('nodeValue'),
             insertBtn: document.getElementById('insertBtn'),
@@ -7,19 +23,26 @@ class ControlPanel {
             searchBtn: document.getElementById('searchBtn'),
             randomBtn: document.getElementById('randomBtn'),
             clearBtn: document.getElementById('clearBtn'),
-            validateBtn: document.getElementById('validateBtn'),
-            centerBtn: document.getElementById('centerBtn'),
             exportBtn: document.getElementById('exportBtn')
         };
         
-        this.isProcessing = false;
-        this.callbacks = {};
+        // Check if required elements exist
+        if (!this.elements.nodeValue || !this.elements.insertBtn) {
+            console.error('Required DOM elements not found');
+            return;
+        }
         
         this.bindEvents();
         this.setupValidation();
     }
 
     bindEvents() {
+        // Verify elements exist before binding
+        if (!this.elements.nodeValue) {
+            console.error('Cannot bind events: nodeValue element not found');
+            return;
+        }
+
         // Input validation
         this.elements.nodeValue.addEventListener('input', (e) => {
             this.validateInput(e.target);
@@ -31,57 +54,80 @@ class ControlPanel {
             }
         });
 
-        // Button events
-        this.elements.insertBtn.addEventListener('click', () => this.handleInsert());
-        this.elements.deleteBtn.addEventListener('click', () => this.handleDelete());
-        this.elements.searchBtn.addEventListener('click', () => this.handleSearch());
-        this.elements.randomBtn.addEventListener('click', () => this.handleRandom());
-        this.elements.clearBtn.addEventListener('click', () => this.handleClear());
-        this.elements.validateBtn.addEventListener('click', () => this.handleValidate());
-        this.elements.centerBtn.addEventListener('click', () => this.handleCenter());
-        this.elements.exportBtn.addEventListener('click', () => this.handleExport());
+        // Button events with null checks
+        if (this.elements.insertBtn) {
+            this.elements.insertBtn.addEventListener('click', () => this.handleInsert());
+        }
+        
+        if (this.elements.deleteBtn) {
+            this.elements.deleteBtn.addEventListener('click', () => this.handleDelete());
+        }
+        
+        if (this.elements.searchBtn) {
+            this.elements.searchBtn.addEventListener('click', () => this.handleSearch());
+        }
+        
+        if (this.elements.randomBtn) {
+            this.elements.randomBtn.addEventListener('click', () => this.handleRandom());
+        }
+        
+        if (this.elements.clearBtn) {
+            this.elements.clearBtn.addEventListener('click', () => this.handleClear());
+        }
+        
+        if (this.elements.exportBtn) {
+            this.elements.exportBtn.addEventListener('click', () => this.handleExport());
+        }
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            
-            switch(e.key) {
-                case 'i':
-                case 'I':
-                    this.elements.nodeValue.focus();
-                    break;
-                case 'r':
-                case 'R':
-                    if (!this.isProcessing) this.handleRandom();
-                    break;
-                case 'c':
-                case 'C':
-                    if (e.ctrlKey || e.metaKey) return; // Don't interfere with copy
-                    if (!this.isProcessing) this.handleClear();
-                    break;
-                case 'v':
-                case 'V':
-                    if (!this.isProcessing) this.handleValidate();
-                    break;
-                case 'Escape':
-                    this.elements.nodeValue.blur();
-                    break;
+       // Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    
+    switch(e.key) {
+        case 'i':
+        case 'I':
+            if (this.elements.nodeValue) {
+                this.elements.nodeValue.focus();
             }
-        });
+            break;
+        case 'r':
+        case 'R':
+            // FIXED: Don't trigger on refresh (Ctrl+R/Cmd+R)
+            if (e.ctrlKey || e.metaKey) return;
+            if (!this.isProcessing) this.handleRandom();
+            break;
+        case 'c':
+        case 'C':
+            if (e.ctrlKey || e.metaKey) return;
+            if (!this.isProcessing) this.handleClear();
+            break;
+        case 'Escape':
+            if (this.elements.nodeValue) {
+                this.elements.nodeValue.blur();
+            }
+            break;
+    }
+});
+
     }
 
     setupValidation() {
-        // Real-time input validation
+        if (!this.elements.nodeValue) return;
+        
         this.elements.nodeValue.addEventListener('input', (e) => {
             const value = e.target.value;
             const isValid = this.isValidInput(value);
             
-            // Update button states
-            this.elements.insertBtn.disabled = !isValid || this.isProcessing;
-            this.elements.deleteBtn.disabled = !isValid || this.isProcessing;
-            this.elements.searchBtn.disabled = !isValid || this.isProcessing;
+            if (this.elements.insertBtn) {
+                this.elements.insertBtn.disabled = !isValid || this.isProcessing;
+            }
+            if (this.elements.deleteBtn) {
+                this.elements.deleteBtn.disabled = !isValid || this.isProcessing;
+            }
+            if (this.elements.searchBtn) {
+                this.elements.searchBtn.disabled = !isValid || this.isProcessing;
+            }
             
-            // Visual feedback
             e.target.classList.toggle('error', !isValid && value !== '');
             e.target.classList.toggle('success', isValid);
         });
@@ -107,7 +153,8 @@ class ControlPanel {
     }
 
     showInputError(message) {
-        // Remove existing error
+        if (!this.elements.nodeValue) return;
+        
         this.clearInputError();
         
         const errorDiv = document.createElement('div');
@@ -124,6 +171,8 @@ class ControlPanel {
     }
 
     clearInputError() {
+        if (!this.elements.nodeValue) return;
+        
         const existingError = this.elements.nodeValue.parentNode.querySelector('.input-error');
         if (existingError) {
             existingError.remove();
@@ -186,7 +235,6 @@ class ControlPanel {
     }
 
     async handleClear() {
-        // Confirmation dialog
         if (!confirm('Are you sure you want to clear all nodes? This action cannot be undone.')) {
             return;
         }
@@ -202,36 +250,28 @@ class ControlPanel {
         }
     }
 
-    async handleValidate() {
-        try {
-            this.setProcessing(true);
-            await this.executeCallback('validate');
-        } catch (error) {
-            this.handleError('Validation failed', error);
-        } finally {
-            this.setProcessing(false);
-        }
-    }
-
-    handleCenter() {
-        this.executeCallback('center');
-    }
-
     handleExport() {
         this.executeCallback('export');
     }
 
     getInputValue() {
+        if (!this.elements.nodeValue) return null;
+        
         const value = this.elements.nodeValue.value.trim();
         if (!this.isValidInput(value)) {
             this.elements.nodeValue.focus();
-            AnimationUtils.shake(this.elements.nodeValue);
+            // FIXED: Safe AnimationUtils usage
+            if (window.AnimationUtils && window.AnimationUtils.shake) {
+                AnimationUtils.shake(this.elements.nodeValue);
+            }
             return null;
         }
         return parseInt(value);
     }
 
     clearInput() {
+        if (!this.elements.nodeValue) return;
+        
         this.elements.nodeValue.value = '';
         this.elements.nodeValue.classList.remove('success', 'error');
         this.clearInputError();
@@ -242,14 +282,12 @@ class ControlPanel {
         this.isProcessing = processing;
         this.updateButtonStates();
         
-        // Add/remove loading class to buttons
         Object.values(this.elements).forEach(element => {
-            if (element.tagName === 'BUTTON') {
+            if (element && element.tagName === 'BUTTON') {
                 element.classList.toggle('loading', processing);
             }
         });
 
-        // Show/hide loading overlay
         const overlay = document.getElementById('loadingOverlay');
         if (overlay) {
             overlay.classList.toggle('show', processing);
@@ -257,48 +295,34 @@ class ControlPanel {
     }
 
     updateButtonStates() {
+        if (!this.elements.nodeValue) return;
+        
         const hasValidInput = this.isValidInput(this.elements.nodeValue.value);
         
-        this.elements.insertBtn.disabled = !hasValidInput || this.isProcessing;
-        this.elements.deleteBtn.disabled = !hasValidInput || this.isProcessing;
-        this.elements.searchBtn.disabled = !hasValidInput || this.isProcessing;
-        this.elements.randomBtn.disabled = this.isProcessing;
-        this.elements.clearBtn.disabled = this.isProcessing;
-        this.elements.validateBtn.disabled = this.isProcessing;
+        if (this.elements.insertBtn) {
+            this.elements.insertBtn.disabled = !hasValidInput || this.isProcessing;
+        }
+        if (this.elements.deleteBtn) {
+            this.elements.deleteBtn.disabled = !hasValidInput || this.isProcessing;
+        }
+        if (this.elements.searchBtn) {
+            this.elements.searchBtn.disabled = !hasValidInput || this.isProcessing;
+        }
+        if (this.elements.randomBtn) {
+            this.elements.randomBtn.disabled = this.isProcessing;
+        }
+        if (this.elements.clearBtn) {
+            this.elements.clearBtn.disabled = this.isProcessing;
+        }
     }
 
-    // Callback system for communication with main app
-    onInsert(callback) {
-        this.callbacks.insert = callback;
-    }
-
-    onDelete(callback) {
-        this.callbacks.delete = callback;
-    }
-
-    onSearch(callback) {
-        this.callbacks.search = callback;
-    }
-
-    onRandom(callback) {
-        this.callbacks.random = callback;
-    }
-
-    onClear(callback) {
-        this.callbacks.clear = callback;
-    }
-
-    onValidate(callback) {
-        this.callbacks.validate = callback;
-    }
-
-    onCenter(callback) {
-        this.callbacks.center = callback;
-    }
-
-    onExport(callback) {
-        this.callbacks.export = callback;
-    }
+    // Callback system
+    onInsert(callback) { this.callbacks.insert = callback; }
+    onDelete(callback) { this.callbacks.delete = callback; }
+    onSearch(callback) { this.callbacks.search = callback; }
+    onRandom(callback) { this.callbacks.random = callback; }
+    onClear(callback) { this.callbacks.clear = callback; }
+    onExport(callback) { this.callbacks.export = callback; }
 
     async executeCallback(action, ...args) {
         if (this.callbacks[action]) {
@@ -308,54 +332,29 @@ class ControlPanel {
 
     handleError(operation, error) {
         console.error(`${operation}:`, error);
-        
-        // Show user-friendly error message
         const message = error.message || 'An unexpected error occurred';
         this.showMessage(`${operation}: ${message}`, 'error');
     }
 
     showMessage(text, type = 'info') {
-        // This will be handled by the main app's message system
         document.dispatchEvent(new CustomEvent('showMessage', {
             detail: { text, type }
         }));
     }
 
-    // Utility methods
     focusInput() {
-        this.elements.nodeValue.focus();
-        this.elements.nodeValue.select();
+        if (this.elements.nodeValue) {
+            this.elements.nodeValue.focus();
+            this.elements.nodeValue.select();
+        }
     }
 
     setInputValue(value) {
-        this.elements.nodeValue.value = value;
-        this.validateInput(this.elements.nodeValue);
-    }
-
-    // Batch operations
-    async insertMultiple(values) {
-        for (const value of values) {
-            this.setInputValue(value);
-            await this.handleInsert();
-            await new Promise(resolve => setTimeout(resolve, 500)); // Delay between insertions
+        if (this.elements.nodeValue) {
+            this.elements.nodeValue.value = value;
+            this.validateInput(this.elements.nodeValue);
         }
-    }
-
-    // Demo sequences
-    async runDemo() {
-        const demoValues = [50, 25, 75, 10, 30, 60, 80, 5, 15, 27, 35];
-        
-        this.showMessage('Running demo sequence...', 'info');
-        
-        for (const value of demoValues) {
-            this.setInputValue(value);
-            await this.handleInsert();
-            await new Promise(resolve => setTimeout(resolve, 800));
-        }
-        
-        this.showMessage('Demo completed!', 'success');
     }
 }
 
-// Make available globally
 window.ControlPanel = ControlPanel;

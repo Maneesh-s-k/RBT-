@@ -15,6 +15,11 @@ void signalHandler(int signal) {
 }
 
 int main() {
+    std::cout << "========================================" << std::endl;
+    std::cout << "🚀 BACKEND SERVER IS STARTING NOW!" << std::endl;
+    std::cout << "🚀 YOU SHOULD SEE THIS MESSAGE!" << std::endl;
+    std::cout << "========================================" << std::endl;
+    
     httplib::Server server;
     server_ptr = &server;
     
@@ -23,6 +28,13 @@ int main() {
     signal(SIGTERM, signalHandler);
     
     TreeAPI treeAPI;
+    // added temporarily for debuging 
+    std::cout << "Clearing tree on server startup..." << std::endl;
+    treeAPI.clearTree();
+    std::cout << "Tree cleared." << std::endl;
+
+    
+    treeAPI.setupRoutes(server);
     
     // Setup API routes
     treeAPI.setupRoutes(server);

@@ -1,4 +1,17 @@
 /* Tree Visualization Components */
+:root {
+    --red-node: #dc2626;
+    --black-node: #1f2937;
+    --node-stroke: #374151;
+    --node-text: #ffffff;
+    --primary-color: #3b82f6;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #06b6d4;
+    --text-muted: #9ca3af;
+}
+
 .tree-svg .node-circle {
     stroke: var(--node-stroke);
     stroke-width: 2;
@@ -28,11 +41,11 @@
 }
 
 @keyframes glow {
-    0%, 100% { 
+    0%, 100% {
         stroke: var(--warning-color);
         filter: drop-shadow(0 0 8px var(--warning-color));
     }
-    50% { 
+    50% {
         stroke: var(--primary-color);
         filter: drop-shadow(0 0 12px var(--primary-color));
     }
@@ -40,12 +53,12 @@
 
 .tree-svg .node-text {
     fill: var(--node-text);
-    font-size: 14px;
+    font-size: 20px !important; /* Increased from 14px */
     font-weight: bold;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
-    font-family: 'Courier New', monospace;
+    font-family: Arial, sans-serif; /* Better readability */
 }
 
 .tree-svg .edge {
@@ -140,14 +153,14 @@
 
 @keyframes validationError {
     0% { stroke-width: 2; }
-    25%, 75% { 
-        stroke-width: 5; 
+    25%, 75% {
+        stroke-width: 5;
         filter: drop-shadow(0 0 8px var(--danger-color));
         transform: translateX(-2px);
     }
     50% { transform: translateX(2px); }
-    100% { 
-        stroke-width: 3; 
+    100% {
+        stroke-width: 3;
         transform: translateX(0);
     }
 }
@@ -182,6 +195,11 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
     color: white;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 /* Message animations */
@@ -222,32 +240,11 @@
 
 @keyframes statUpdate {
     0% { transform: scale(1); }
-    50% { 
+    50% {
         transform: scale(1.1);
         color: var(--primary-color);
     }
     100% { transform: scale(1); }
-}
-
-/* Tree container scroll indicators */
-.tree-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, 
-        var(--primary-color) 0%, 
-        transparent 50%, 
-        var(--primary-color) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1;
-}
-
-.tree-container.scrollable::before {
-    opacity: 0.3;
 }
 
 /* Responsive tree visualization */
@@ -257,7 +254,7 @@
     }
     
     .tree-svg .node-text {
-        font-size: 12px;
+        font-size: 18px !important; /* Responsive font size */
     }
     
     .tree-container {
@@ -275,7 +272,7 @@
     }
     
     .tree-svg .node-text {
-        font-size: 10px;
+        font-size: 16px !important; /* Responsive font size */
     }
     
     .tree-container {
@@ -295,22 +292,6 @@
 
 .input-field input:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .tree-svg .node-circle {
-        stroke-width: 3;
-    }
-    
-    .tree-svg .edge {
-        stroke-width: 3;
-        opacity: 1;
-    }
-    
-    .message {
-        border-width: 2px;
-    }
 }
 
 /* Reduced motion support */

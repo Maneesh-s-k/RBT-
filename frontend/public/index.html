@@ -9,18 +9,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-content">
-                <h1>🌳 Red-Black Tree Visualizer</h1>
-                <p>Interactive visualization of Red-Black Tree operations with C++ backend</p>
-                <div class="connection-status" id="connectionStatus">
-                    <span class="status-indicator"></span>
-                    <span class="status-text">Connecting...</span>
-                </div>
-            </div>
-        </header>
-
         <!-- Control Panel -->
         <section class="control-panel">
             <div class="controls-container">
@@ -46,20 +34,20 @@
                 <!-- Action Controls -->
                 <div class="action-group">
                     <button id="randomBtn" class="btn btn-secondary" title="Insert random node">
-                        <span class="btn-icon">🎲</span> Random
+                        Random
                     </button>
                     <button id="clearBtn" class="btn btn-warning" title="Clear all nodes">
-                        <span class="btn-icon">🗑️</span> Clear All
+                        Clear All
                     </button>
-                    <button id="validateBtn" class="btn btn-success" title="Validate RB properties">
-                        <span class="btn-icon">✅</span> Validate
+                    <button id="exportBtn" class="btn btn-info btn-small" title="Export tree data">
+                        <span class="btn-icon">💾</span> Export
                     </button>
                 </div>
             </div>
         </section>
 
         <!-- Stats Panel -->
-        <section class="stats-panel">
+        <section class="stats-panel compact">
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-value" id="nodeCount">0</div>
@@ -80,19 +68,21 @@
             </div>
         </section>
 
+        <!-- Connection Status (Compact) -->
+        <div class="connection-status-compact" id="connectionStatus">
+            <span class="status-indicator"></span>
+            <span class="status-text">Connecting...</span>
+        </div>
+
         <!-- Message Area -->
-        <section class="message-section">
+        <section class="message-section compact">
             <div id="messageContainer" class="message-container"></div>
         </section>
 
         <!-- Visualization Area -->
-        <section class="visualization-section">
+        <section class="visualization-section main">
             <div class="viz-header">
                 <h2>Tree Visualization</h2>
-                <div class="viz-controls">
-                    <button id="centerBtn" class="btn btn-small">Center View</button>
-                    <button id="exportBtn" class="btn btn-small">Export JSON</button>
-                </div>
             </div>
             <div class="tree-container">
                 <svg id="treeSvg" class="tree-svg">
@@ -102,7 +92,7 @@
         </section>
 
         <!-- Properties Panel -->
-        <section class="properties-panel">
+        <section class="properties-panel compact">
             <h3>Red-Black Tree Properties</h3>
             <div class="properties-grid">
                 <div class="property-item">
@@ -135,15 +125,14 @@
         <div class="loading-text">Processing...</div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts - CRITICAL ORDER -->
+    <script src="../src/js/utils/animation.js"></script>
+    <script src="../src/js/utils/svg-helpers.js"></script>
     <script src="../src/js/api/client.js"></script>
-<script src="../src/js/api/endpoints.js"></script>
-<script src="../src/js/api/animation.js"></script>
-<script src="../src/js/utils/svg-helpers.js"></script>
-<script src="../src/js/components/tree-visualizer.js"></script>
-<script src="../src/js/components/control-panel.js"></script>
-<script src="../src/js/components/stats-panel.js"></script>
-<script src="../src/js/app.js"></script>
-
+    <script src="../src/js/api/endpoints.js"></script>
+    <script src="../src/js/components/tree-visualizer.js"></script>
+    <script src="../src/js/components/control-panel.js"></script>
+    <script src="../src/js/components/stats-panel.js"></script>
+    <script src="../src/js/app.js"></script>
 </body>
 </html>

@@ -4,10 +4,40 @@
 #include <chrono>
 
 TreeAPI::TreeAPI() {
+    std::cout << "=== TreeAPI Constructor ===" << std::endl;
     tree = std::make_unique<rbtree::RedBlackTree<int>>();
+    std::cout << "Initial tree size: " << tree->size() << std::endl;
+    
+    // If tree already has nodes, something is wrong
+    if (!tree->empty()) {
+        std::cout << "ERROR: Tree not empty after construction!" << std::endl;
+        auto nodes = tree->getAllNodes();
+        for (auto node : nodes) {
+            std::cout << "Unexpected node: " << node->data << std::endl;
+        }
+    }
 }
 
 void TreeAPI::setupRoutes(httplib::Server& server) {
+
+
+
+    server.Post("/api/tree/random", [this](const httplib::Request& req, httplib::Response& res) {
+        std::cout << "\n=== RANDOM API ENDPOINT HIT ===" << std::endl;
+        std::cout << "Time: " << time(nullptr) << std::endl;
+        std::cout << "User-Agent: " << req.get_header_value("User-Agent") << std::endl;
+        std::cout << "Referer: " << req.get_header_value("Referer") << std::endl;
+        std::cout << "Origin: " << req.get_header_value("Origin") << std::endl;
+        std::cout << "Method: " << req.method << std::endl;
+        std::cout.flush();
+        
+        auto result = insertRandom();
+        res.set_content(result.dump(), "application/json");
+        
+        std::cout << "=== RANDOM API ENDPOINT COMPLETE ===" << std::endl;
+        std::cout.flush();
+    });
+    
     // Enable CORS for all routes
     server.set_pre_routing_handler([](const httplib::Request&, httplib::Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
@@ -100,17 +130,34 @@ void TreeAPI::setupRoutes(httplib::Server& server) {
 }
 
 json TreeAPI::insertNode(int value) {
+    std::cout << "🔍 INSERT_NODE called with value: " << value << std::endl;
+    std::cout << "🔍 Current tree size before insert: " << tree->size() << std::endl;
+    
     try {
+        bool existed = tree->search(value);
+        
+        if (existed) {
+            std::cout << "⚠️ Node " << value << " already exists" << std::endl;
+            return successResponse("Node already exists", {
+                {"value", value},
+                {"existed", true}
+            });
+        }
+        
         tree->insert(value);
+        std::cout << "✅ Node " << value << " inserted. New tree size: " << tree->size() << std::endl;
+        
         return successResponse("Node inserted successfully", {
             {"value", value},
-            {"tree", getTreeData()["data"]["tree"]},
-            {"stats", getTreeStats()["data"]}
+            {"existed", false}
         });
+        
     } catch (const std::exception& e) {
         return errorResponse("Failed to insert node: " + std::string(e.what()));
     }
 }
+
+
 
 json TreeAPI::deleteNode(int value) {
     try {
@@ -206,17 +253,25 @@ json TreeAPI::validateTree() {
 }
 
 json TreeAPI::insertRandom() {
+    std::cout << "🎲 INSERT_RANDOM called" << std::endl;
+    std::cout.flush(); // Force immediate output
+    
     try {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(1, 100);
         
         int value = dis(gen);
+        std::cout << "🎲 Generated random value: " << value << std::endl;
+        std::cout.flush();
+        
         return insertNode(value);
     } catch (const std::exception& e) {
         return errorResponse("Failed to insert random node: " + std::string(e.what()));
     }
 }
+
+
 
 json TreeAPI::nodeToJson(rbtree::RBNode<int>* node) {
     // Fixed: Use getters and proper null handling

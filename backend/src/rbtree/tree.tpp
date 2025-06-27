@@ -8,6 +8,12 @@ RedBlackTree<T>::RedBlackTree() {
     NIL = new RBNode<T>(T(), false);  // Black sentinel node
     root = NIL;
     nodeCount = 0;
+    
+    // CRITICAL: Ensure NIL node is properly initialized
+    NIL->left = nullptr;
+    NIL->right = nullptr;
+    NIL->parent = nullptr;
+    NIL->isRed = false;
 }
 
 template<typename T>
@@ -74,6 +80,11 @@ void RedBlackTree<T>::rightRotate(RBNode<T>* x) {
 
 template<typename T>
 void RedBlackTree<T>::insert(const T& value) {
+    // FIXED: Check for duplicates first to prevent unnecessary insertions
+    if (search(value)) {
+        return; // Don't insert duplicates
+    }
+    
     RBNode<T>* node = new RBNode<T>(value);
     RBNode<T>* y = nullptr;
     RBNode<T>* x = root;
@@ -111,7 +122,7 @@ void RedBlackTree<T>::fixInsert(RBNode<T>* k) {
     while (k->parent != nullptr && k->parent->isRed) {
         if (k->parent == k->parent->parent->right) {
             u = k->parent->parent->left;
-            if (u->isRed) {
+            if (u != NIL && u->isRed) {  // FIXED: Check for NIL
                 u->isRed = false;
                 k->parent->isRed = false;
                 k->parent->parent->isRed = true;
@@ -127,7 +138,7 @@ void RedBlackTree<T>::fixInsert(RBNode<T>* k) {
             }
         } else {
             u = k->parent->parent->right;
-            if (u->isRed) {
+            if (u != NIL && u->isRed) {  // FIXED: Check for NIL
                 u->isRed = false;
                 k->parent->isRed = false;
                 k->parent->parent->isRed = true;
@@ -179,6 +190,12 @@ void RedBlackTree<T>::clear() {
     clearHelper(root);
     root = NIL;
     nodeCount = 0;
+    
+    // FIXED: Reset NIL node properly
+    NIL->left = nullptr;
+    NIL->right = nullptr;
+    NIL->parent = nullptr;
+    NIL->isRed = false;
 }
 
 template<typename T>

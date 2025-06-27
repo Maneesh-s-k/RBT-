@@ -1,15 +1,18 @@
 class TreeVisualizer {
     constructor(svgElement) {
-        this.svg = svgElement;
-        this.width = 1200;
-        this.height = 600;
-        this.nodeRadius = 25;
-        this.currentNodes = [];
-        this.highlightedNodes = new Set();
-        
-        this.setupSVG();
-        this.bindEvents();
-    }
+    this.svg = svgElement;
+    this.width = 1300; // Increased from 800
+    this.height = 800; // Increased from 400
+    this.nodeRadius = 35; // Increased from 25
+    this.currentNodes = [];
+    this.highlightedNodes = new Set();
+    this.minNodeSpacing = 150; // Increased from 120
+    this.levelHeight = 120; // Increased from 100
+    
+    this.setupSVG();
+    this.bindEvents();
+}
+
 
     setupSVG() {
         this.svg.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
@@ -35,10 +38,21 @@ class TreeVisualizer {
 
     async draw(treeData) {
         try {
-            console.log('TreeVisualizer received:', treeData);
+            console.log('TreeVisualizer received data:', treeData);
             
+            // Clear everything first
+            SVGHelpers.clearSVG(this.treeGroup);
+            
+            // Recreate the groups after clearing
+            this.edgeGroup = SVGHelpers.createGroup({ class: 'edge-group' });
+            this.nodeGroup = SVGHelpers.createGroup({ class: 'node-group' });
+            this.treeGroup.appendChild(this.edgeGroup);
+            this.treeGroup.appendChild(this.nodeGroup);
+            
+            // Check for empty
             if (!treeData || !treeData.tree || treeData.tree.empty === true || 
                 !treeData.tree.nodes || treeData.tree.nodes.length === 0) {
+                console.log('Drawing empty state');
                 this.drawEmptyState();
                 return;
             }
@@ -56,87 +70,133 @@ class TreeVisualizer {
     }
 
     async drawTree(nodes) {
-        // Clear previous content
-        SVGHelpers.clearSVG(this.edgeGroup);
-        SVGHelpers.clearSVG(this.nodeGroup);
+        console.log('Drawing tree with nodes:', nodes);
 
-        if (nodes.length === 0) {
-            this.drawEmptyState();
-            return;
-        }
-
-        // Calculate proper layout
-        const layoutNodes = this.calculateProperLayout(nodes);
+        // FIXED: Use Reingold-Tilford inspired symmetric layout
+        const layoutNodes = this.calculateSymmetricLayout(nodes);
         
-        // Draw edges using parent-child relationships
+        // FIXED: Dynamic sizing based on tree bounds
+        this.adjustViewBoxForTree(layoutNodes);
+        
+        console.log('Layout nodes:', layoutNodes);
+
+        // Draw edges first
         await this.drawProperEdges(layoutNodes);
         
-        // Draw nodes
+        // Then draw nodes
         await this.drawNodes(layoutNodes);
         
-        // Update viewBox to fit content
-        this.updateViewBox(layoutNodes);
+        console.log('Tree drawing completed, nodes in DOM:', this.nodeGroup.children.length);
     }
 
-    calculateProperLayout(nodes) {
-        // Create a proper tree layout
-        const nodeMap = new Map(nodes.map(node => [node.data, node]));
+    // FIXED: Symmetric tree layout algorithm (Reingold-Tilford inspired)
+    calculateSymmetricLayout(nodes) {
+        if (nodes.length === 0) return [];
         
         // Find root node
         const root = nodes.find(node => node.parent === null);
-        if (!root) {
-            console.error('No root node found');
-            return nodes;
-        }
-
-        // Calculate positions using proper tree layout
-        const positions = this.calculateTreePositions(root, nodeMap);
+        if (!root) return nodes;
+        
+        // Build tree structure
+        const nodeMap = new Map(nodes.map(node => [node.data, node]));
+        const children = new Map();
+        
+        // Initialize children map
+        nodes.forEach(node => {
+            children.set(node.data, []);
+        });
+        
+        // Populate children
+        nodes.forEach(node => {
+            if (node.left !== null) {
+                const leftChild = nodeMap.get(node.left);
+                if (leftChild) children.get(node.data).push(leftChild);
+            }
+            if (node.right !== null) {
+                const rightChild = nodeMap.get(node.right);
+                if (rightChild) children.get(node.data).push(rightChild);
+            }
+        });
+        
+        // Calculate positions using symmetric algorithm
+        const positions = new Map();
+        
+        // First pass: calculate subtree widths (bottom-up)
+        const calculateSubtreeWidth = (node) => {
+            const nodeChildren = children.get(node.data) || [];
+            if (nodeChildren.length === 0) {
+                return this.minNodeSpacing;
+            }
+            
+            let totalWidth = 0;
+            nodeChildren.forEach(child => {
+                totalWidth += calculateSubtreeWidth(child);
+            });
+            
+            return Math.max(totalWidth, this.minNodeSpacing);
+        };
+        
+        // Second pass: position nodes (top-down)
+        const positionNode = (node, x, y, availableWidth) => {
+            positions.set(node.data, { x, y });
+            
+            const nodeChildren = children.get(node.data) || [];
+            if (nodeChildren.length === 0) return;
+            
+            // Calculate positions for children
+            let currentX = x - availableWidth / 2;
+            
+            nodeChildren.forEach(child => {
+                const childWidth = calculateSubtreeWidth(child);
+                const childX = currentX + childWidth / 2;
+                const childY = y + this.levelHeight;
+                
+                positionNode(child, childX, childY, childWidth);
+                currentX += childWidth;
+            });
+        };
+        
+        // Start positioning from root
+        const rootWidth = calculateSubtreeWidth(root);
+        const rootX = this.width / 2;
+        const rootY = 100;
+        
+        positionNode(root, rootX, rootY, rootWidth);
         
         // Apply positions to nodes
         return nodes.map(node => ({
             ...node,
-            x: positions[node.data]?.x || node.x,
-            y: positions[node.data]?.y || node.y
+            x: positions.get(node.data)?.x || this.width / 2,
+            y: positions.get(node.data)?.y || 100
         }));
     }
 
-    calculateTreePositions(root, nodeMap, level = 0, position = { x: 0 }) {
-        const positions = {};
-        const levelHeight = 100;
-        const nodeSpacing = 80;
+    // FIXED: Dynamic viewBox adjustment for tree expansion
+    adjustViewBoxForTree(nodes) {
+        if (nodes.length === 0) return;
         
-        // In-order traversal to assign x positions
-        const inorderTraversal = (node, level, pos) => {
-            if (!node) return pos;
-            
-            // Process left subtree
-            if (node.left !== null) {
-                const leftChild = nodeMap.get(node.left);
-                if (leftChild) {
-                    pos = inorderTraversal(leftChild, level + 1, pos);
-                }
-            }
-            
-            // Process current node
-            positions[node.data] = {
-                x: this.width / 2 + (pos.x - nodeMap.size / 2) * nodeSpacing,
-                y: 80 + level * levelHeight
-            };
-            pos.x++;
-            
-            // Process right subtree
-            if (node.right !== null) {
-                const rightChild = nodeMap.get(node.right);
-                if (rightChild) {
-                    pos = inorderTraversal(rightChild, level + 1, pos);
-                }
-            }
-            
-            return pos;
-        };
+        const padding = 100;
+        const minX = Math.min(...nodes.map(n => n.x)) - padding;
+        const maxX = Math.max(...nodes.map(n => n.x)) + padding;
+        const minY = Math.min(...nodes.map(n => n.y)) - padding;
+        const maxY = Math.max(...nodes.map(n => n.y)) + padding;
         
-        inorderTraversal(root, 0, position);
-        return positions;
+        const treeWidth = maxX - minX;
+        const treeHeight = maxY - minY;
+        
+        // Expand dimensions if tree is larger
+        this.width = Math.max(this.width, treeWidth);
+        this.height = Math.max(this.height, treeHeight);
+        
+        // Update SVG viewBox
+        this.svg.setAttribute('viewBox', `${minX} ${minY} ${treeWidth} ${treeHeight}`);
+        
+        // Update container height dynamically
+        const container = this.svg.closest('.tree-container');
+        if (container) {
+            const newHeight = Math.max(600, treeHeight * 0.8);
+            container.style.minHeight = `${newHeight}px`;
+        }
     }
 
     async drawProperEdges(nodes) {
@@ -144,7 +204,7 @@ class TreeVisualizer {
         
         for (const node of nodes) {
             // Draw edge to left child
-            if (node.left !== null) {
+            if (node.left !== null && node.left !== undefined) {
                 const leftChild = nodeMap.get(node.left);
                 if (leftChild) {
                     await this.drawEdge(node, leftChild);
@@ -152,7 +212,7 @@ class TreeVisualizer {
             }
             
             // Draw edge to right child
-            if (node.right !== null) {
+            if (node.right !== null && node.right !== undefined) {
                 const rightChild = nodeMap.get(node.right);
                 if (rightChild) {
                     await this.drawEdge(node, rightChild);
@@ -167,7 +227,9 @@ class TreeVisualizer {
             child.x, child.y,
             { 
                 class: 'edge',
-                'stroke-opacity': '0.7'
+                'stroke': '#6b7280',
+                'stroke-width': '4', // Thicker edges
+                'stroke-opacity': '0.8'
             }
         );
         
@@ -176,47 +238,65 @@ class TreeVisualizer {
     }
 
     async drawNodes(nodes) {
+        console.log('drawNodes called with:', nodes);
+        
         for (const node of nodes) {
-            await this.drawNode(node);
+            console.log(`Drawing node ${node.data} at (${node.x}, ${node.y})`);
+            const nodeElement = await this.drawNode(node);
+            console.log('Node element created:', nodeElement);
         }
+        
+        console.log('All nodes drawn, total in nodeGroup:', this.nodeGroup.children.length);
     }
 
     async drawNode(node) {
-        // Create node group
-        const nodeGroup = SVGHelpers.createGroup({
-            class: 'node-group',
-            'data-value': node.data
-        });
+    console.log(`drawNode called for node ${node.data} at (${node.x}, ${node.y})`);
+    
+    // Create node group
+    const nodeGroup = SVGHelpers.createGroup({
+        class: 'node-group',
+        'data-value': node.data
+    });
 
-        // Create circle
-        const circle = SVGHelpers.createCircle(
-            node.x, node.y, this.nodeRadius,
-            {
-                class: `node-circle ${node.color}`,
-                'data-value': node.data
-            }
-        );
+    // Create circle with explicit styling
+    const circle = SVGHelpers.createCircle(
+        node.x, node.y, this.nodeRadius,
+        {
+            class: `node-circle ${node.color}`,
+            'data-value': node.data,
+            'fill': node.color === 'red' ? '#dc2626' : '#1f2937',
+            'stroke': '#374151',
+            'stroke-width': '4'
+        }
+    );
 
-        // Create text
-        const text = SVGHelpers.createText(
-            node.x, node.y, node.data.toString(),
-            {
-                class: 'node-text',
-                'data-value': node.data
-            }
-        );
+    // Create text with LARGER font size
+    const text = SVGHelpers.createText(
+        node.x, node.y, node.data.toString(),
+        {
+            class: 'node-text',
+            'data-value': node.data,
+            'fill': 'white',
+            'text-anchor': 'middle',
+            'dominant-baseline': 'central',
+            'font-size': '20px', // INCREASED from 18px
+            'font-weight': 'bold',
+            'font-family': 'Arial, sans-serif' // Added for better readability
+        }
+    );
 
-        nodeGroup.appendChild(circle);
-        nodeGroup.appendChild(text);
-        
-        // Add click handler
-        this.addNodeClickHandler(nodeGroup, node);
-        
-        // Add to DOM
-        this.nodeGroup.appendChild(nodeGroup);
-
-        return nodeGroup;
-    }
+    nodeGroup.appendChild(circle);
+    nodeGroup.appendChild(text);
+    
+    // Add click handler
+    this.addNodeClickHandler(nodeGroup, node);
+    
+    // Add to DOM
+    this.nodeGroup.appendChild(nodeGroup);
+    
+    console.log('Node added to DOM:', nodeGroup);
+    return nodeGroup;
+}
 
     addNodeClickHandler(nodeElement, node) {
         nodeElement.addEventListener('click', (event) => {
@@ -250,10 +330,10 @@ class TreeVisualizer {
         
         if (isEntering) {
             circle.style.transform = 'scale(1.1)';
-            circle.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
+            circle.style.filter = 'drop-shadow(0 6px 12px rgba(0,0,0,0.4))';
         } else {
             circle.style.transform = 'scale(1)';
-            circle.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))';
+            circle.style.filter = 'drop-shadow(0 3px 6px rgba(0,0,0,0.2))';
         }
     }
 
@@ -324,7 +404,10 @@ class TreeVisualizer {
             {
                 class: 'empty-tree-message',
                 'text-anchor': 'middle',
-                'dominant-baseline': 'central'
+                'dominant-baseline': 'central',
+                'fill': '#9ca3af',
+                'font-size': '22px', // Larger font
+                'font-style': 'italic'
             }
         );
         
@@ -342,7 +425,8 @@ class TreeVisualizer {
                 class: 'error-message',
                 'text-anchor': 'middle',
                 'dominant-baseline': 'central',
-                'fill': '#ef4444'
+                'fill': '#ef4444',
+                'font-size': '20px'
             }
         );
         
@@ -350,20 +434,9 @@ class TreeVisualizer {
     }
 
     updateViewBox(nodes = null) {
-        if (!nodes || nodes.length === 0) {
-            this.svg.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
-            return;
-        }
-
-        const viewBox = SVGHelpers.calculateViewBox(nodes, 50);
-        this.svg.setAttribute('viewBox', 
-            `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`
-        );
-    }
-
-    centerView() {
-        if (this.currentNodes.length > 0) {
-            this.updateViewBox(this.currentNodes);
+        // Dynamic viewBox is handled in adjustViewBoxForTree
+        if (nodes) {
+            this.adjustViewBoxForTree(nodes);
         }
     }
 
